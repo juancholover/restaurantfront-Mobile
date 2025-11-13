@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "827540918245",
+    "project_id": "restaurantflutter-b9e10",
+    "storage_bucket": "restaurantflutter-b9e10.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:827540918245:android:ea02024222dc2bb5ae290c",
+        "android_client_info": {
+          "package_name": "com.example.flutterlogin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB85Oj1Vs4xAr-PNjJHH4wfqB3QnnXX4nY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
