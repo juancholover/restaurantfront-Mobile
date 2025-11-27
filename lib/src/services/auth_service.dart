@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'api_service.dart';
+import 'notification_service.dart';
 
 class AuthService with ChangeNotifier {
   final ApiService _apiService = ApiService();
+  final NotificationService _notificationService = NotificationService();
   final _storage = const FlutterSecureStorage();
   static const _tokenKey = 'auth_token';
   static const _userKey = 'user_data';
@@ -85,6 +87,13 @@ class AuthService with ChangeNotifier {
         _isLoggedIn = true;
         _userData = user;
         notifyListeners();
+
+        // Registrar token FCM en el backend después del login
+        final fcmToken = _notificationService.fcmToken;
+        if (fcmToken != null) {
+          await _notificationService.registerTokenWithBackend(fcmToken);
+        }
+
         return true;
       }
 
@@ -96,6 +105,9 @@ class AuthService with ChangeNotifier {
   }
 
   Future<void> logout() async {
+    // Eliminar token FCM del backend antes de cerrar sesión
+    await _notificationService.unregisterTokenFromBackend();
+
     _isLoggedIn = false;
     _userData = null;
     await _apiService.deleteToken();

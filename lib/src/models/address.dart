@@ -1,6 +1,6 @@
 class Address {
   final int? id;
-  final String label; // Casa, Trabajo, Otro
+  final String label;
   final String addressLine;
   final String city;
   final String? postalCode;

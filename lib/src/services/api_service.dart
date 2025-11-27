@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/error_response.dart';
 
 class ApiService {
-  // 🔧 CONFIGURACIÓN - Detecta automáticamente el entorno
   static String get baseUrl {
     if (kIsWeb) {
       // Para web (Chrome, Edge, etc.)
@@ -13,8 +12,6 @@ class ApiService {
     } else {
       // Para emulador Android
       return 'http://10.0.2.2:8080/api';
-      // Para dispositivo físico en la misma red: 'http://TU_IP:8080/api'
-      // Para producción: 'https://tu-dominio.com/api'
     }
   }
 
@@ -58,7 +55,6 @@ class ApiService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return body;
       } else {
-        // Parsear ErrorResponse del backend
         final errorResponse = ErrorResponse.fromJson(body);
         throw ApiException(
           statusCode: response.statusCode,
@@ -69,7 +65,6 @@ class ApiService {
     } catch (e) {
       if (e is ApiException) rethrow;
 
-      // Error de parsing JSON
       throw ApiException(
         statusCode: response.statusCode,
         message: 'Error al procesar la respuesta del servidor',
@@ -77,7 +72,6 @@ class ApiService {
     }
   }
 
-  // GET
   Future<dynamic> get(String endpoint, {bool requiresAuth = false}) async {
     try {
       final headers = await _getHeaders(requiresAuth: requiresAuth);
@@ -91,7 +85,6 @@ class ApiService {
     }
   }
 
-  // POST
   Future<dynamic> post(
     String endpoint,
     Map<String, dynamic> data, {
@@ -113,7 +106,6 @@ class ApiService {
     }
   }
 
-  // PUT
   Future<dynamic> put(
     String endpoint,
     Map<String, dynamic> data, {
@@ -135,7 +127,6 @@ class ApiService {
     }
   }
 
-  // DELETE
   Future<dynamic> delete(String endpoint, {bool requiresAuth = false}) async {
     try {
       final headers = await _getHeaders(requiresAuth: requiresAuth);
@@ -150,7 +141,6 @@ class ApiService {
   }
 }
 
-// Excepción personalizada
 class ApiException implements Exception {
   final int statusCode;
   final String message;

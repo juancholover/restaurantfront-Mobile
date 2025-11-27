@@ -16,7 +16,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final OrderService _orderService = OrderService();
   List<Order> _orders = [];
   bool _isLoading = true;
-  String _filterStatus = 'all'; // all, active, completed, cancelled
+  String _filterStatus = 'all';
 
   @override
   void initState() {
@@ -207,7 +207,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Order ID y Status
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

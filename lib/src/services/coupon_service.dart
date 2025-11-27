@@ -77,12 +77,12 @@ class CouponService {
   Future<Map<String, dynamic>?> createCoupon({
     required String code,
     required String description,
-    required String discountType, // 'FIXED' o 'PERCENTAGE'
+    required String discountType,
     required double discountValue,
     required double minimumAmount,
     double? maximumDiscount,
     bool isActive = true,
-    required String expiresAt, // ISO 8601: "2025-12-31T23:59:59"
+    required String expiresAt,
     required int usageLimit,
     required int userUsageLimit,
   }) async {

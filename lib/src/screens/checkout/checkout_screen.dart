@@ -17,12 +17,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final PaymentService _paymentService = PaymentService();
   final _formKey = GlobalKey<FormState>();
 
-  // Controllers
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _instructionsController = TextEditingController();
 
-  String _paymentMethod = 'cash'; // cash, card, google_pay, apple_pay
+  String _paymentMethod = 'cash';
   bool _isProcessing = false;
   bool _isGooglePayAvailable = false;
   bool _isApplePayAvailable = false;
@@ -34,9 +33,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _checkPlatformPayAvailability();
   }
 
-  void _loadUserData() {
-    // Cargar datos del usuario si existen
-    // TODO: Implementar carga de direcciones guardadas
+  void _loadUserData() async {
+    try {
+      // Cargar datos del usuario desde el backend
+      // final apiService = ApiService();
+      // final response = await apiService.get('/users/addresses', requiresAuth: true);
+      // if (response['success'] == true) {
+      //   final addresses = response['data'] as List;
+      //   // Cargar primera dirección si existe
+      //   if (addresses.isNotEmpty && mounted) {
+      //     setState(() {
+      //       _addressController.text = addresses[0]['address'];
+      //       _phoneController.text = addresses[0]['phone'] ?? '';
+      //     });
+      //   }
+      // }
+      print(
+        'ℹ️ Carga de direcciones guardadas (requiere endpoint /users/addresses)',
+      );
+    } catch (e) {
+      print('❌ Error cargando datos del usuario: $e');
+    }
   }
 
   Future<void> _checkPlatformPayAvailability() async {

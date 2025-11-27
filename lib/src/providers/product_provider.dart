@@ -10,7 +10,6 @@ class ProductProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  // Getters
   List<Product> get products => _products;
   bool get isLoading => _isLoading;
   String? get error => _error;

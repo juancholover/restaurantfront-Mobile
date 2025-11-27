@@ -29,15 +29,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     try {
       final apiService = ApiService();
 
-      // TODO: Implementar endpoints en backend
-      // Por ahora usamos datos mock
-
       try {
         // Intentar cargar estadísticas reales
+        debugPrint('📊 Cargando estadísticas del dashboard...');
         final statsResponse = await apiService.get(
           '/admin/stats',
           requiresAuth: true,
         );
+
+        debugPrint('✅ Estadísticas recibidas:');
+        debugPrint('   Success: ${statsResponse['success']}');
+        debugPrint('   Data: ${statsResponse['data']}');
 
         if (mounted) {
           setState(() {
@@ -45,8 +47,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           });
         }
       } catch (e) {
-        // Si falla, usar datos mock
-        debugPrint('⚠️ Endpoint /admin/stats no disponible, usando datos mock');
+        debugPrint('⚠️ Endpoint /admin/stats no disponible: $e');
+        debugPrint('⚠️ Usando datos mock');
         if (mounted) {
           setState(() {
             _stats = {
@@ -61,9 +63,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
       try {
         // Intentar cargar órdenes recientes
+        debugPrint('📦 Cargando pedidos recientes...');
         final ordersResponse = await apiService.get(
           '/admin/recent-orders',
           requiresAuth: true,
+        );
+
+        debugPrint('✅ Pedidos recientes recibidos:');
+        debugPrint('   Success: ${ordersResponse['success']}');
+        debugPrint(
+          '   Count: ${(ordersResponse['data'] as List?)?.length ?? 0}',
         );
 
         if (mounted) {
@@ -74,10 +83,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           });
         }
       } catch (e) {
-        // Si falla, usar datos mock
-        debugPrint(
-          '⚠️ Endpoint /admin/recent-orders no disponible, usando datos mock',
-        );
+        debugPrint('⚠️ Endpoint /admin/recent-orders no disponible: $e');
+        debugPrint('⚠️ Usando datos mock');
         if (mounted) {
           setState(() {
             _recentOrders = [];
@@ -100,7 +107,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           });
         }
       } catch (e) {
-        // Si falla, usar datos mock
         debugPrint(
           '⚠️ Endpoint /admin/active-coupons no disponible, usando datos mock',
         );
@@ -128,7 +134,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     }
   }
 
-  /// Formatea la fecha actual en español sin necesidad de initializeDateFormatting
   String _formatCurrentDate() {
     final now = DateTime.now();
     final weekdays = [
@@ -293,18 +298,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildStatisticsGrid() {
-    final todayOrders = _stats['todayOrders'] ?? 0;
-    final todaySales = _stats['todaySales'] ?? 0.0;
-    final activeUsers = _stats['activeUsers'] ?? 0;
-    final pendingOrders = _stats['pendingOrders'] ?? 0;
+    final todayOrders = (_stats['todayOrders'] ?? 0) as int;
+    final todaySales = ((_stats['todaySales'] ?? 0.0) as num).toDouble();
+    final activeUsers = (_stats['activeUsers'] ?? 0) as int;
+    final pendingOrders = (_stats['pendingOrders'] ?? 0) as int;
 
     return GridView.count(
       crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.4,
       children: [
         _buildStatCard(
           'Pedidos Hoy',
@@ -344,18 +349,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, color: color, size: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+              ],
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,14 +373,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -405,10 +423,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             Icons.list_alt,
             Colors.blue,
             () {
-              // TODO: Navegar a gestión de pedidos
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Próximamente')));
+              // Navegar a la pantalla de historial de pedidos (admin puede ver todos)
+              Navigator.pushNamed(context, '/order-history');
             },
           ),
         ),
@@ -504,7 +520,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ],
             ),
             onTap: () {
-              // TODO: Ver detalle del pedido
+              Navigator.pushNamed(
+                context,
+                '/order-detail',
+                arguments: order['id'],
+              );
             },
           ),
         );
@@ -551,8 +571,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return Column(
       children: _activeCoupons.take(5).map((coupon) {
-        final usagePercent =
-            (coupon['usageCount'] / coupon['usageLimit']) * 100;
+        final usageCount = (coupon['usageCount'] ?? 0) as num;
+        final usageLimit = (coupon['usageLimit'] ?? 1) as num;
+        final usagePercent = usageLimit > 0
+            ? (usageCount / usageLimit) * 100
+            : 0.0;
 
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
@@ -577,7 +600,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${coupon['usageCount']}/${coupon['usageLimit']} usos',
+                  '${usageCount.toInt()}/${usageLimit.toInt()} usos',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],

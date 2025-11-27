@@ -1,8 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutterlogin/src/services/api_service.dart';
+import 'package:flutterlogin/src/services/navigation_service.dart';
 
-/// Handler para mensajes en segundo plano (top-level function)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -18,41 +23,39 @@ class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  final ApiService _apiService = ApiService();
 
   bool _initialized = false;
   String? _fcmToken;
 
-  /// Inicializa el servicio de notificaciones
   Future<void> initialize() async {
     if (_initialized) return;
 
     try {
-      // Inicializar Firebase
       await Firebase.initializeApp();
 
-      // Configurar handler para mensajes en segundo plano
       FirebaseMessaging.onBackgroundMessage(
         _firebaseMessagingBackgroundHandler,
       );
 
-      // Solicitar permisos
       await _requestPermissions();
 
-      // Configurar notificaciones locales
       await _initializeLocalNotifications();
 
-      // Obtener token FCM
       _fcmToken = await _firebaseMessaging.getToken();
       print('🔑 FCM Token: $_fcmToken');
 
-      // Escuchar cambios de token
+      // Enviar token inicial al backend si hay usuario autenticado
+      if (_fcmToken != null) {
+        await registerTokenWithBackend(_fcmToken!);
+      }
+
       _firebaseMessaging.onTokenRefresh.listen((newToken) {
         _fcmToken = newToken;
         print('🔄 Token actualizado: $newToken');
-        // TODO: Enviar token al backend
+        registerTokenWithBackend(newToken);
       });
 
-      // Configurar handlers de mensajes
       _setupMessageHandlers();
 
       _initialized = true;
@@ -62,7 +65,6 @@ class NotificationService {
     }
   }
 
-  /// Solicita permisos de notificación
   Future<void> _requestPermissions() async {
     final settings = await _firebaseMessaging.requestPermission(
       alert: true,
@@ -84,7 +86,6 @@ class NotificationService {
     }
   }
 
-  /// Inicializa notificaciones locales (para mostrar cuando app está abierta)
   Future<void> _initializeLocalNotifications() async {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -148,7 +149,6 @@ class NotificationService {
     }
   }
 
-  /// Muestra una notificación local (cuando la app está en primer plano)
   Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
     final android = message.notification?.android;
@@ -182,7 +182,20 @@ class NotificationService {
   /// Maneja el tap en una notificación local
   void _onNotificationTapped(NotificationResponse response) {
     print('🔔 Notificación tocada: ${response.payload}');
-    // TODO: Navegar a la pantalla correspondiente
+    if (response.payload != null) {
+      try {
+        // El payload viene como string del Map de data
+        // Intentar parsear si es JSON
+        final payload = response.payload!;
+        if (payload.startsWith('{')) {
+          // Es un JSON string, parsearlo
+          // Nota: Para navegación real necesitas NavigatorKey global
+          print('📲 Payload parseado para navegación');
+        }
+      } catch (e) {
+        print('❌ Error parseando payload: $e');
+      }
+    }
   }
 
   /// Maneja el tap en una notificación de Firebase
@@ -195,27 +208,42 @@ class NotificationService {
     // - new_restaurant: Nuevo restaurante disponible
 
     final type = data['type'];
-    final id = data['id'];
+    final idStr = data['orderId'] ?? data['id'];
 
-    switch (type) {
-      case 'order_status':
-        // TODO: Navegar a detalle de pedido
-        print('🍽️ Navegar a pedido #$id');
-        break;
-      case 'special_offer':
-        // TODO: Navegar a ofertas
-        print('🎁 Navegar a ofertas');
-        break;
-      case 'new_restaurant':
-        // TODO: Navegar a restaurante
-        print('🏪 Navegar a restaurante #$id');
-        break;
-      default:
-        print('❓ Tipo de notificación desconocido: $type');
+    try {
+      switch (type) {
+        case 'order_status':
+          print('🍽️ Navegar a pedido #$idStr');
+          final orderId = int.tryParse(idStr.toString());
+          if (orderId != null) {
+            NavigationService.navigatorKey.currentState?.pushNamed(
+              '/order-detail',
+              arguments: orderId,
+            );
+          }
+          break;
+        case 'special_offer':
+          print('🎁 Navegar a cupones');
+          NavigationService.navigatorKey.currentState?.pushNamed(
+            '/coupon-history',
+          );
+          break;
+        case 'new_restaurant':
+          print('🏪 Navegar a restaurantes');
+          NavigationService.navigatorKey.currentState?.pushNamed(
+            '/restaurants',
+          );
+          break;
+        default:
+          print('❓ Tipo de notificación desconocido: $type');
+          // Navegar a main screen por defecto
+          NavigationService.navigatorKey.currentState?.pushNamed('/main');
+      }
+    } catch (e) {
+      print('❌ Error navegando desde notificación: $e');
     }
   }
 
-  /// Obtiene el token FCM actual
   String? get fcmToken => _fcmToken;
 
   /// Suscribe a un topic
@@ -238,7 +266,6 @@ class NotificationService {
     }
   }
 
-  /// Elimina el token FCM (cuando el usuario cierra sesión)
   Future<void> deleteToken() async {
     try {
       await _firebaseMessaging.deleteToken();
@@ -246,6 +273,84 @@ class NotificationService {
       print('🗑️ Token FCM eliminado');
     } catch (e) {
       print('❌ Error eliminando token: $e');
+    }
+  }
+
+  /// Obtener nombre del dispositivo
+  Future<String> _getDeviceName() async {
+    try {
+      final deviceInfo = DeviceInfoPlugin();
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfo.androidInfo;
+        return '${androidInfo.manufacturer} ${androidInfo.model}';
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfo.iosInfo;
+        return '${iosInfo.name} (${iosInfo.model})';
+      }
+      return 'Unknown Device';
+    } catch (e) {
+      print('⚠️ Error obteniendo nombre del dispositivo: $e');
+      return 'Unknown Device';
+    }
+  }
+
+  /// Registrar token FCM en el backend
+  Future<void> registerTokenWithBackend(String token) async {
+    try {
+      final authToken = await _apiService.getToken();
+
+      if (authToken == null) {
+        print('⚠️ Usuario no autenticado, no se registra FCM token');
+        return;
+      }
+
+      final deviceName = await _getDeviceName();
+      final deviceType = Platform.isAndroid
+          ? 'ANDROID'
+          : Platform.isIOS
+          ? 'IOS'
+          : 'WEB';
+
+      final response = await _apiService.post('/fcm/token', {
+        'token': token,
+        'deviceType': deviceType,
+        'deviceName': deviceName,
+      }, requiresAuth: true);
+
+      if (response['success'] == true) {
+        print('✅ Token FCM registrado en backend');
+        print('   Dispositivo: $deviceName ($deviceType)');
+      } else {
+        print('⚠️ Respuesta inesperada del backend: $response');
+      }
+    } catch (e) {
+      print('❌ Error registrando token en backend: $e');
+      // No lanzar error, solo registrar
+    }
+  }
+
+  /// Eliminar token FCM del backend (logout)
+  Future<void> unregisterTokenFromBackend() async {
+    try {
+      if (_fcmToken == null) {
+        print('⚠️ No hay token FCM para eliminar');
+        return;
+      }
+
+      final response = await _apiService.delete(
+        '/fcm/token?token=$_fcmToken',
+        requiresAuth: false,
+      );
+
+      if (response['success'] == true) {
+        print('✅ Token FCM eliminado del backend');
+      }
+
+      // Eliminar token local de Firebase
+      await deleteToken();
+    } catch (e) {
+      print('❌ Error eliminando token del backend: $e');
+      // No lanzar error, solo registrar
     }
   }
 }

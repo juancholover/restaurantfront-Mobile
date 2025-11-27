@@ -146,7 +146,7 @@ class _CouponHistoryScreenState extends State<CouponHistoryScreen> {
               CouponCard(
                 couponData: coupon,
                 showCopyButton: false,
-                onTap: null, // No clickeable en historial
+                onTap: null,
               ),
 
               // Información de uso

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Crea una transición de tipo fade entre pantallas
 PageRouteBuilder fadeTransition(Widget page) {
   return PageRouteBuilder(
     transitionDuration: const Duration(milliseconds: 900),
@@ -10,7 +9,6 @@ PageRouteBuilder fadeTransition(Widget page) {
   );
 }
 
-/// Crea una transición combinada fade + slide hacia arriba
 PageRouteBuilder fadeSlideTransition(Widget page) {
   return PageRouteBuilder(
     transitionDuration: const Duration(milliseconds: 900),

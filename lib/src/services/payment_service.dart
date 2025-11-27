@@ -16,12 +16,10 @@ class PaymentResult {
 class PaymentService {
   final _storage = const FlutterSecureStorage();
   static const _tokenKey = 'auth_token';
-  // TODO: Reemplazar con tu clave publicable de Stripe
-  // Obtenerla en: https://dashboard.stripe.com/apikeys
+
   static const String stripePublishableKey =
       'pk_test_51SSPC9FQrDKWPh9Z7bF4MDXKsOdHnE3B7eiLaRTA6zc0e7Xol3uWynCNRb812WlIRFE4pw1XBN5nZEIjUtK8lWeZ008wTXSAAG';
 
-  // TODO: Reemplazar con tu URL del backend
   static const String backendUrl =
       'http://10.0.2.2:8080/api'; // Para emulador Android
 
@@ -81,8 +79,13 @@ class PaymentService {
       // Convertir amount a centavos (Stripe usa centavos)
       final amountInCents = (amount * 100).round();
 
+      debugPrint('🔵 Creando Payment Intent...');
+      debugPrint('   URL: $backendUrl/payments');
+      debugPrint('   Amount (cents): $amountInCents');
+      debugPrint('   Currency: $currency');
+
       final response = await http.post(
-        Uri.parse('$backendUrl/payments'), // ← Corregido: sin /create-intent
+        Uri.parse('$backendUrl/payments'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -95,17 +98,37 @@ class PaymentService {
         }),
       );
 
+      debugPrint('📥 Respuesta del backend:');
+      debugPrint('   Status Code: ${response.statusCode}');
+      debugPrint('   Body: ${response.body}');
+
       if (response.statusCode == 200) {
-        // Respuesta directa del backend (sin wrapper ApiResponse)
-        return json.decode(response.body);
+        final responseData = json.decode(response.body);
+
+        // Verificar si la respuesta tiene el formato correcto
+        if (responseData['paymentIntentId'] != null &&
+            responseData['clientSecret'] != null) {
+          debugPrint('✅ Payment Intent creado exitosamente');
+          debugPrint('   ID: ${responseData['paymentIntentId']}');
+          return responseData;
+        } else {
+          throw Exception(
+            'Respuesta inválida del servidor: falta paymentIntentId o clientSecret',
+          );
+        }
       } else if (response.statusCode == 401) {
         throw Exception(
           'Token JWT inválido o expirado. Por favor, inicia sesión nuevamente.',
         );
       } else {
-        throw Exception('Error al crear Payment Intent: ${response.body}');
+        final errorBody = response.body;
+        debugPrint('❌ Error del backend: $errorBody');
+        throw Exception(
+          'Error al crear Payment Intent (${response.statusCode}): $errorBody',
+        );
       }
     } catch (e) {
+      debugPrint('❌ Error completo: $e');
       throw Exception('Error de red: $e');
     }
   }

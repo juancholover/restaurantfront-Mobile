@@ -9,13 +9,13 @@ class Restaurant {
   final bool isActive;
   final bool isFavorite;
   final double deliveryFee;
-  final int deliveryTime; // minutos
+  final int deliveryTime;
   final List<String> categories;
   final double latitude;
   final double longitude;
   final String openingHours;
   final String? coverImageUrl;
-  final double? averagePrice; // Precio promedio de platos
+  final double? averagePrice;
 
   // 🏷️ PROMOCIONES
   final bool hasPromotion;
@@ -24,7 +24,7 @@ class Restaurant {
   final int? discountPercentage;
 
   // 💰 PRECIOS
-  final String priceRange; // "$", "$$", "$$$", "$$$$"
+  final String priceRange;
   final double? minPrice;
   final double? maxPrice;
 
@@ -34,7 +34,7 @@ class Restaurant {
 
   // ⭐ RESEÑAS
   final int reviewCount;
-  final double? distanceKm; // Distancia desde ubicación del usuario
+  final double? distanceKm;
 
   Restaurant({
     required this.id,

@@ -53,8 +53,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       appBar: AppBar(
         title: Text('Reseñas de ${widget.restaurant.name}'),
         backgroundColor: Colors.orange,
-        foregroundColor: Colors.white, // Color blanco para el texto y la flecha
-        iconTheme: const IconThemeData(color: Colors.white), // Flecha blanca
+        foregroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -129,7 +129,6 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header: Usuario y fecha
             Row(
               children: [
                 CircleAvatar(

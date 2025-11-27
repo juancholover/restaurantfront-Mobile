@@ -3,7 +3,6 @@ import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'src/services/auth_service.dart';
-import 'src/services/payment_service.dart';
 import 'src/theme/app_theme.dart';
 import 'src/theme/theme_provider.dart';
 import 'src/providers/restaurant_provider.dart';
@@ -18,6 +17,7 @@ import 'src/screens/coupons/coupon_history_screen.dart';
 import 'src/screens/admin/admin_coupon_screen.dart';
 import 'src/screens/admin/admin_dashboard_screen.dart';
 import 'src/screens/orders/order_history_screen.dart';
+import 'src/screens/orders/order_detail_screen.dart';
 import 'package:flutterlogin/src/providers/main_screen_provider.dart';
 import 'package:flutterlogin/src/screens/main_screen.dart';
 import 'package:flutterlogin/src/services/navigation_service.dart';
@@ -34,8 +34,6 @@ void main() async {
 
   // Inicializar NotificationService para push notifications
   await NotificationService().initialize();
-
-  // ⚠️ NO inicializar Stripe aquí - se hará lazy cuando se necesite
 
   final authService = AuthService();
   await authService.init();
@@ -99,6 +97,16 @@ class MyApp extends StatelessWidget {
             themeMode: theme.isDarkMode ? ThemeMode.dark : ThemeMode.light,
             debugShowCheckedModeBanner: false,
             home: const WelcomeScreen(),
+            onGenerateRoute: (settings) {
+              // Manejo de rutas con parámetros
+              if (settings.name == '/order-detail') {
+                final orderId = settings.arguments as int;
+                return MaterialPageRoute(
+                  builder: (context) => OrderDetailScreen(orderId: orderId),
+                );
+              }
+              return null; // Deja que las rutas estáticas se manejen normalmente
+            },
             routes: {
               '/main': (context) => const MainScreen(),
               '/restaurants': (context) => const RestaurantsScreen(),

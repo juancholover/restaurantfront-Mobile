@@ -22,7 +22,7 @@ class RestaurantDetailScreen extends StatefulWidget {
 
 class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   String? _selectedCategory;
-  String _sortBy = 'name'; // name, price_asc, price_desc, rating
+  String _sortBy = 'name';
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
@@ -58,7 +58,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
     );
   }
 
-  // AppBar con imagen del restaurante
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
       expandedHeight: 250,
@@ -78,7 +77,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 );
               },
             ),
-            // Gradient overlay
+
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -722,7 +721,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   }
 }
 
-// Bottom Sheet con detalles del producto
 class _ProductDetailSheet extends StatefulWidget {
   final Product product;
 
@@ -1007,8 +1005,8 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                 _quantity,
                 restaurantId: widget.product.restaurantId,
               );
-              Navigator.pop(context); // Cerrar diálogo
-              Navigator.pop(context); // Cerrar bottom sheet
+              Navigator.pop(context);
+              Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
@@ -1018,7 +1016,6 @@ class _ProductDetailSheetState extends State<_ProductDetailSheet> {
                   action: SnackBarAction(
                     label: 'Ver carrito',
                     onPressed: () {
-                      // Usar el servicio de navegación para ir al carrito
                       NavigationService.navigateToCart();
                     },
                   ),

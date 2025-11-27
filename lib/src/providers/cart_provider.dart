@@ -10,20 +10,18 @@ class CartProvider with ChangeNotifier {
   final CouponService _couponService = CouponService();
 
   List<CartItem> _items = [];
-  List<CartItem> _savedForLater = []; // NUEVO: Productos guardados para después
-  Map<int, String> _productNotes =
-      {}; // NUEVO: Notas por producto (productId: nota)
-  List<String> _usedCoupons = []; // NUEVO: Historial de cupones usados
+  List<CartItem> _savedForLater = [];
+  Map<int, String> _productNotes = {};
+  List<String> _usedCoupons = [];
   int? _restaurantId;
   double _deliveryFee = 0.0;
   String? _couponCode;
   double _discount = 0.0;
 
-  // Getters
   List<CartItem> get items => _items;
-  List<CartItem> get savedForLater => _savedForLater; // NUEVO
-  Map<int, String> get productNotes => _productNotes; // NUEVO
-  List<String> get usedCoupons => _usedCoupons; // NUEVO
+  List<CartItem> get savedForLater => _savedForLater;
+  Map<int, String> get productNotes => _productNotes;
+  List<String> get usedCoupons => _usedCoupons;
   int get itemCount => _items.fold(0, (sum, item) => sum + item.quantity);
   int? get restaurantId => _restaurantId;
   double get deliveryFee => _deliveryFee;
@@ -63,14 +61,14 @@ class CartProvider with ChangeNotifier {
             .map((item) => CartItem.fromJson(item))
             .toList();
 
-        // NUEVO: Cargar productos guardados
+        // Cargar productos guardados
         if (decoded['savedForLater'] != null) {
           _savedForLater = (decoded['savedForLater'] as List)
               .map((item) => CartItem.fromJson(item))
               .toList();
         }
 
-        // NUEVO: Cargar notas de productos
+        // Cargar notas de productos
         if (decoded['productNotes'] != null) {
           _productNotes = Map<int, String>.from(
             (decoded['productNotes'] as Map).map(
@@ -80,7 +78,7 @@ class CartProvider with ChangeNotifier {
           );
         }
 
-        // NUEVO: Cargar historial de cupones
+        // Cargar historial de cupones
         if (decoded['usedCoupons'] != null) {
           _usedCoupons = List<String>.from(decoded['usedCoupons']);
         }
@@ -101,11 +99,9 @@ class CartProvider with ChangeNotifier {
     try {
       final cartData = {
         'items': _items.map((item) => item.toJson()).toList(),
-        'savedForLater': _savedForLater
-            .map((item) => item.toJson())
-            .toList(), // NUEVO
-        'productNotes': _productNotes, // NUEVO
-        'usedCoupons': _usedCoupons, // NUEVO
+        'savedForLater': _savedForLater.map((item) => item.toJson()).toList(),
+        'productNotes': _productNotes,
+        'usedCoupons': _usedCoupons,
         'restaurantId': _restaurantId,
         'deliveryFee': _deliveryFee,
         'couponCode': _couponCode,
@@ -130,7 +126,6 @@ class CartProvider with ChangeNotifier {
     if (_restaurantId != null &&
         restaurantId != null &&
         _restaurantId != restaurantId) {
-      // Este caso se debe manejar en la UI con un diálogo
       return;
     }
 
@@ -259,18 +254,17 @@ class CartProvider with ChangeNotifier {
 
   // Aplicar cupón de descuento
   Future<bool> applyCoupon(String code) async {
-    // Simulación - En producción, validar con el backend
     final coupons = {
-      'DESCUENTO10': 10.0, // $10 de descuento
-      'PRIMERACOMPRA': 15.0, // $15 de descuento
-      'VERANO2024': 20.0, // $20 de descuento
-      'ESPECIAL50': subtotal * 0.5, // 50% de descuento
+      'DESCUENTO10': 10.0,
+      'PRIMERACOMPRA': 15.0,
+      'VERANO2024': 20.0,
+      'ESPECIAL50': subtotal * 0.5,
     };
 
     if (coupons.containsKey(code.toUpperCase())) {
       _couponCode = code.toUpperCase();
       _discount = coupons[code.toUpperCase()]!;
-      await _markCouponAsUsed(code); // Marcar cupón como usado
+      await _markCouponAsUsed(code);
       await _saveCart();
       notifyListeners();
       return true;
@@ -286,9 +280,6 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // ========== NUEVAS FUNCIONALIDADES ==========
-
-  // 1. SAVE FOR LATER: Mover producto a "Guardados"
   Future<void> saveForLater(int productId) async {
     final itemIndex = _items.indexWhere((item) => item.product.id == productId);
     if (itemIndex != -1) {

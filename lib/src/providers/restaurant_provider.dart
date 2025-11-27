@@ -12,7 +12,6 @@ class RestaurantProvider with ChangeNotifier {
   String _searchQuery = '';
   String _selectedCategory = 'All';
 
-  // Getters
   List<Restaurant> get restaurants => _filteredRestaurants;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -32,7 +31,6 @@ class RestaurantProvider with ChangeNotifier {
     'Healthy',
   ];
 
-  // Fetch restaurants from API
   Future<void> fetchRestaurants() async {
     _isLoading = true;
     _error = null;

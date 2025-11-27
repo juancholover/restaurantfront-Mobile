@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Helper para trabajar con horarios de apertura de restaurantes
 class OpeningHoursHelper {
   /// Verifica si un restaurante está abierto actualmente
   ///
@@ -12,14 +11,13 @@ class OpeningHoursHelper {
   static bool isOpenNow(String openingHours) {
     final now = DateTime.now();
 
-    // Caso especial: 24 horas
     if (openingHours.toLowerCase().contains('24') ||
         openingHours.toLowerCase().contains('siempre')) {
       return true;
     }
 
     // Obtener día de la semana
-    final weekday = now.weekday; // 1 = Lunes, 7 = Domingo
+    final weekday = now.weekday;
 
     // Verificar si tiene horarios por día
     if (openingHours.contains('Lun') ||
@@ -28,7 +26,6 @@ class OpeningHoursHelper {
       return _checkDaySpecificHours(openingHours, now, weekday);
     }
 
-    // Horario simple (mismo todos los días)
     return _checkSimpleHours(openingHours, now);
   }
 
@@ -61,15 +58,14 @@ class OpeningHoursHelper {
 
   /// Verifica si el día actual está en el rango especificado
   static bool _isDayInRange(String dayRange, int weekday) {
-    // Lun-Vie
     if (dayRange.contains('Lun') && dayRange.contains('Vie')) {
       return weekday >= 1 && weekday <= 5;
     }
-    // Sáb-Dom
+
     if (dayRange.contains('Sáb') && dayRange.contains('Dom')) {
       return weekday == 6 || weekday == 7;
     }
-    // Lun, Mar, etc.
+
     final dayMap = {
       'Lun': 1,
       'Mar': 2,
@@ -89,7 +85,6 @@ class OpeningHoursHelper {
     return false;
   }
 
-  /// Verifica horarios simples (mismo horario todos los días)
   static bool _checkSimpleHours(String hours, DateTime now) {
     try {
       // Buscar patrón "HH:MM AM/PM - HH:MM AM/PM" o "HH:MM - HH:MM"
@@ -98,7 +93,7 @@ class OpeningHoursHelper {
       );
 
       final match = pattern.firstMatch(hours);
-      if (match == null) return true; // Si no puede parsear, asume abierto
+      if (match == null) return true; //
 
       // Hora de apertura
       int openHour = int.parse(match.group(1)!);
@@ -122,7 +117,6 @@ class OpeningHoursHelper {
         closeHour = 0;
       }
 
-      // Crear fechas para comparar
       final openTime = DateTime(
         now.year,
         now.month,
@@ -146,7 +140,6 @@ class OpeningHoursHelper {
 
       return now.isAfter(openTime) && now.isBefore(closeTime);
     } catch (e) {
-      // Si hay error al parsear, asume abierto
       return true;
     }
   }
@@ -157,8 +150,44 @@ class OpeningHoursHelper {
       return 'Abierto ahora';
     }
 
-    // Por ahora retorna horario simple
-    // TODO: Calcular próxima apertura basado en día y hora
+    final now = DateTime.now();
+
+    // Si tiene formato 24 horas
+    if (openingHours.toLowerCase().contains('24')) {
+      return 'Abierto 24 horas';
+    }
+
+    // Intentar extraer hora de apertura
+    final pattern = RegExp(r'(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?');
+    final match = pattern.firstMatch(openingHours);
+
+    if (match != null) {
+      int openHour = int.parse(match.group(1)!);
+      final openMinute = match.group(2)!;
+      final period = match.group(3)?.toUpperCase();
+
+      if (period == 'PM' && openHour != 12) {
+        openHour += 12;
+      } else if (period == 'AM' && openHour == 12) {
+        openHour = 0;
+      }
+
+      final openTime = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        openHour,
+        int.parse(openMinute),
+      );
+
+      // Si ya pasó la hora de hoy, mostrar para mañana
+      if (openTime.isBefore(now)) {
+        return 'Abre mañana a las ${_formatTime(openHour, openMinute)}';
+      }
+
+      return 'Abre a las ${_formatTime(openHour, openMinute)}';
+    }
+
     return 'Abre: $openingHours';
   }
 

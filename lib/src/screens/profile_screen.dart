@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/validators.dart';
 import '../utils/shared_navigation.dart';
@@ -51,21 +52,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     setState(() => _isSaving = true);
 
-    // TODO: Implementar actualización de perfil en el backend
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final auth = Provider.of<AuthService>(context, listen: false);
 
-    if (mounted) {
-      setState(() {
-        _isSaving = false;
-        _isEditing = false;
-      });
+      // Actualizar perfil en el backend
+      final apiService = ApiService();
+      final response = await apiService.put('/auth/profile', {
+        'name': _nameController.text,
+        'phone': _phoneController.text,
+      }, requiresAuth: true);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ Perfil actualizado exitosamente'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (response['success'] == true && mounted) {
+        // Actualizar datos locales
+        await auth.init();
+
+        setState(() {
+          _isSaving = false;
+          _isEditing = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Perfil actualizado exitosamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Error al actualizar perfil: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -346,13 +369,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         radius: 20,
                         child: IconButton(
                           icon: const Icon(Icons.camera_alt, size: 20),
-                          onPressed: () {
-                            // TODO: Cambiar foto de perfil
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('📸 Cambiar foto (próximamente)'),
+                          onPressed: () async {
+                            // Mostrar opciones de cámara/galería
+                            final result = await showModalBottomSheet<String>(
+                              context: context,
+                              builder: (context) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      leading: const Icon(Icons.photo_camera),
+                                      title: const Text('Tomar foto'),
+                                      onTap: () =>
+                                          Navigator.pop(context, 'camera'),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.photo_library),
+                                      title: const Text('Elegir de galería'),
+                                      onTap: () =>
+                                          Navigator.pop(context, 'gallery'),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.cancel),
+                                      title: const Text('Cancelar'),
+                                      onTap: () => Navigator.pop(context),
+                                    ),
+                                  ],
+                                ),
                               ),
                             );
+
+                            if (result != null && mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '📸 Función de $result (requiere backend)',
+                                  ),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),

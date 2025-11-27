@@ -15,9 +15,16 @@ class OrderService {
     String? notes,
     String? paymentMethod,
     String? paymentStatus,
-    String? paymentIntentId, // ← Nuevo parámetro
+    String? paymentIntentId,
   }) async {
     try {
+      debugPrint('🛒 Creando pedido...');
+      debugPrint('   Restaurant ID: $restaurantId');
+      debugPrint('   Items: ${items.length}');
+      debugPrint('   Total: \$$totalAmount');
+      debugPrint('   Payment Method: $paymentMethod');
+      debugPrint('   Payment Status: $paymentStatus');
+
       final response = await _apiService.post('/orders', {
         'restaurantId': restaurantId,
         'items': items,
@@ -28,17 +35,24 @@ class OrderService {
         if (notes != null && notes.isNotEmpty) 'notes': notes,
         if (paymentMethod != null) 'paymentMethod': paymentMethod,
         if (paymentStatus != null) 'paymentStatus': paymentStatus,
-        if (paymentIntentId != null)
-          'paymentIntentId': paymentIntentId, // ← Enviar al backend
+        if (paymentIntentId != null) 'paymentIntentId': paymentIntentId,
       }, requiresAuth: true);
 
+      debugPrint('📥 Respuesta del backend:');
+      debugPrint('   Success: ${response['success']}');
+      debugPrint('   Data: ${response['data']}');
+
       if (response['success'] == true) {
-        return Order.fromJson(response['data']);
+        final order = Order.fromJson(response['data']);
+        debugPrint('✅ Pedido creado exitosamente:');
+        debugPrint('   ID: ${order.id}');
+        debugPrint('   Status: ${order.status}');
+        return order;
       } else {
         throw Exception(response['message'] ?? 'Error al crear orden');
       }
     } catch (e) {
-      debugPrint('Error creating order: $e');
+      debugPrint('❌ Error creating order: $e');
       rethrow;
     }
   }

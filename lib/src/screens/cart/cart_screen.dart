@@ -17,7 +17,6 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
-  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   final _couponController = TextEditingController();
   bool _isApplyingCoupon = false;
   late TabController _tabController;
@@ -87,94 +86,81 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
     return Column(
       children: [
-        // Lista de productos con AnimatedList
+        // Lista de productos
         Expanded(
-          child: AnimatedList(
-            key: _listKey,
-            initialItemCount: cart.items.length,
+          child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemBuilder: (context, index, animation) {
-              if (index >= cart.items.length) {
-                return const SizedBox.shrink();
-              }
-
+            itemCount: cart.items.length,
+            itemBuilder: (context, index) {
               final item = cart.items[index];
               final note = cart.getProductNote(item.product.id);
 
-              return SlideTransition(
-                position: animation.drive(
-                  Tween(
-                    begin: const Offset(1, 0),
-                    end: Offset.zero,
-                  ).chain(CurveTween(curve: Curves.easeOut)),
-                ),
-                child: FadeTransition(
-                  opacity: animation,
-                  child: CartItemCard(
-                    item: item,
-                    note: note,
-                    onIncrement: () {
-                      cart.incrementQuantity(item.product.id);
-                    },
-                    onDecrement: () {
-                      cart.decrementQuantity(item.product.id);
-                    },
-                    onRemove: () {
-                      _showRemoveItemDialog(
-                        context,
-                        item.product.id,
-                        item.product.name,
-                      );
-                    },
-                    onAddNote: () async {
-                      final newNote = await showDialog<String>(
-                        context: context,
-                        builder: (context) => ProductNoteDialog(
-                          initialNote: note,
-                          productName: item.product.name,
-                        ),
-                      );
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: CartItemCard(
+                  item: item,
+                  note: note,
+                  onIncrement: () {
+                    cart.incrementQuantity(item.product.id);
+                  },
+                  onDecrement: () {
+                    cart.decrementQuantity(item.product.id);
+                  },
+                  onRemove: () {
+                    _showRemoveItemDialog(
+                      context,
+                      item.product.id,
+                      item.product.name,
+                    );
+                  },
+                  onAddNote: () async {
+                    final newNote = await showDialog<String>(
+                      context: context,
+                      builder: (context) => ProductNoteDialog(
+                        initialNote: note,
+                        productName: item.product.name,
+                      ),
+                    );
 
-                      if (newNote != null) {
-                        cart.setProductNote(item.product.id, newNote);
-
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              newNote.isEmpty
-                                  ? 'Nota eliminada'
-                                  : 'Nota guardada',
-                            ),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    },
-                    onSaveForLater: () async {
-                      await cart.saveForLater(item.product.id);
+                    if (newNote != null) {
+                      cart.setProductNote(item.product.id, newNote);
 
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            '${item.product.name} guardado para después',
+                            newNote.isEmpty
+                                ? 'Nota eliminada'
+                                : 'Nota guardada',
                           ),
-                          backgroundColor: Colors.orange,
-                          action: SnackBarAction(
-                            label: 'Deshacer',
-                            textColor: Colors.white,
-                            onPressed: () {
-                              cart.moveToCart(item.product.id);
-                            },
-                          ),
+                          backgroundColor: Colors.green,
                         ),
                       );
+                    }
+                  },
+                  onSaveForLater: () async {
+                    await cart.saveForLater(item.product.id);
 
-                      // Cambiar a tab de guardados
-                      _tabController.animateTo(1);
-                    },
-                  ),
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${item.product.name} guardado para después',
+                        ),
+                        backgroundColor: Colors.orange,
+                        action: SnackBarAction(
+                          label: 'Deshacer',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            cart.moveToCart(item.product.id);
+                          },
+                        ),
+                      ),
+                    );
+
+                    // Cambiar a tab de guardados
+                    _tabController.animateTo(1);
+                  },
                 ),
               );
             },
@@ -653,7 +639,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
 
     setState(() => _isApplyingCoupon = true);
 
-    // Validar con el backend
     final success = await cart.validateCouponWithBackend(code);
 
     setState(() => _isApplyingCoupon = false);
@@ -722,7 +707,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           children: [
-            // Handle bar
             Container(
               margin: const EdgeInsets.only(top: 12),
               width: 40,
@@ -733,7 +717,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
               ),
             ),
 
-            // Header
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(
@@ -826,7 +809,7 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           const SizedBox(height: 32),
           ElevatedButton.icon(
             onPressed: () {
-              // Navegar al home (índice 0 del BottomNavigationBar)
+              // Navegar al home
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
             icon: const Icon(Icons.restaurant_menu),
@@ -858,7 +841,6 @@ class _CartScreenState extends State<CartScreen> with TickerProviderStateMixin {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Subtotal
               _buildPriceRow('Subtotal', cart.subtotal),
               const SizedBox(height: 8),
 

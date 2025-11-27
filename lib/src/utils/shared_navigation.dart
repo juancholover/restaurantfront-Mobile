@@ -4,11 +4,6 @@ import '../screens/login_screen.dart';
 import '../screens/register_screen.dart';
 import 'page_transitions.dart';
 
-/// =============================================================
-/// 📍 Helper global para navegar entre pantallas principales
-/// Usa transiciones elegantes y mantiene el historial limpio.
-/// =============================================================
-
 /// Navega al Login desde cualquier pantalla
 void goToLogin(BuildContext context, {bool replace = true}) {
   final route = fadeSlideTransition(const LoginScreen());

@@ -227,13 +227,37 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () {
-                    // TODO: Implementar llamada al repartidor
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Función de llamada próximamente'),
-                      ),
-                    );
+                  onPressed: () async {
+                    final phone = driver.phone;
+                    if (phone.isNotEmpty) {
+                      // Usar url_launcher para hacer la llamada
+                      // Descomentar cuando agregues url_launcher al pubspec.yaml:
+                      // final Uri telUri = Uri(scheme: 'tel', path: phone);
+                      // if (await canLaunchUrl(telUri)) {
+                      //   await launchUrl(telUri);
+                      // }
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('📞 Llamar a: $phone'),
+                            action: SnackBarAction(
+                              label: 'Cerrar',
+                              onPressed: () {},
+                            ),
+                          ),
+                        );
+                      }
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('❌ Teléfono no disponible'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   },
                   icon: const Icon(Icons.phone, color: AppTheme.primaryOrange),
                   style: IconButton.styleFrom(
@@ -739,8 +763,23 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       }
 
       // Agregar items del pedido al carrito
-      // TODO: Necesitarás cargar los productos completos del restaurante
-      // Para esto necesitas implementar la lógica de conversión
+      // Nota: Para reordenar, necesitas cargar los productos actuales del restaurante
+      // ya que los precios o disponibilidad pueden haber cambiado
+
+      // Por ahora, mostrar mensaje informativo
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('ℹ️ Redirigiendo al restaurante para reordenar...'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Navegar al restaurante para que el usuario agregue los items manualmente
+      Navigator.pushNamed(
+        context,
+        '/restaurant-detail',
+        arguments: _order!.restaurantId,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

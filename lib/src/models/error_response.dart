@@ -36,7 +36,6 @@ class ErrorResponse {
   String get userFriendlyMessage {
     // Si hay detalles, intentar extraer información útil
     if (details != null && details!.isNotEmpty) {
-      // Para errores de validación
       if (exceptionType == 'MethodArgumentNotValidException') {
         final errors = <String>[];
         details!.forEach((field, error) {
@@ -73,19 +72,19 @@ class ErrorResponse {
   String get colorHex {
     switch (status) {
       case 400:
-        return '#FF9800'; // Orange
+        return '#FF9800';
       case 401:
-        return '#F44336'; // Red
+        return '#F44336';
       case 403:
-        return '#E91E63'; // Pink
+        return '#E91E63';
       case 404:
-        return '#2196F3'; // Blue
+        return '#2196F3';
       case 409:
-        return '#FF5722'; // Deep Orange
+        return '#FF5722';
       case 500:
-        return '#F44336'; // Red
+        return '#F44336';
       default:
-        return '#9E9E9E'; // Grey
+        return '#9E9E9E';
     }
   }
 

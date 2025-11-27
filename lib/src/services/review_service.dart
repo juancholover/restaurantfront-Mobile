@@ -7,15 +7,14 @@ class ReviewService {
 
   // Crear una reseña
   Future<Review> createReview({
-    int? orderId, // Ahora es opcional
+    int? orderId,
     required int restaurantId,
     required double rating,
     required String comment,
-    String? restaurantName, // Nuevo parámetro opcional
+    String? restaurantName,
     List<String>? images,
   }) async {
     try {
-      // Construir el body sin incluir orderId si es null o 0
       final Map<String, dynamic> body = {
         'restaurantId': restaurantId,
         'rating': rating,
@@ -24,7 +23,6 @@ class ReviewService {
         if (images != null && images.isNotEmpty) 'images': images,
       };
 
-      // Solo agregar orderId si no es null y no es 0
       if (orderId != null && orderId != 0) {
         body['orderId'] = orderId;
       }
